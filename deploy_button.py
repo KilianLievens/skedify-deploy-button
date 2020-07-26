@@ -72,7 +72,7 @@ try:
             bouncetime=300
             )
 
-    GPIO.setup(BEEPER_OUT_PIN, GPIO.OUT)
+    GPIO.setup(DEPLOY_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     GPIO.add_event_detect(
         DEPLOY_BUTTON_PIN,
         GPIO.RISING,
@@ -80,10 +80,11 @@ try:
         bouncetime=5000 # Avoid someone double pressing within 5 seconds
         )
 
-    GPIO.setup(DEPLOY_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(BEEPER_OUT_PIN, GPIO.OUT)
 
     message = input("LETS GO!\n")
 
 finally:
+    # Always cleanup
     GPIO.cleanup()
     print('cleaned up')
