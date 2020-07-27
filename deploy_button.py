@@ -38,7 +38,7 @@ def beeper_daemon():
             GPIO.output(BEEPER_OUT_PIN, False)
             break
 
-        rotator != rotator
+        rotator = not rotator
         GPIO.output(BEEPER_OUT_PIN, rotator)
         time.sleep(0.5)
 
