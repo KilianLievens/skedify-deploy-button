@@ -25,6 +25,10 @@ SWITCH_MESSAGES = {
     PRODUCTION_SWITCH_PIN: 'PRODUCTION ENABLED'
 }
 
+# DEPLOY COMMANDS
+# TODO 
+# development = 'kubectl config set-cluster SkedifyVideoDevelopment && sh /!!!TODO!!!/get-all-enterprise-yaml.sh development | kubectl apply -f -'
+
 #### CALLBACKS ####
 def beeper_daemon():
     rotator = False
@@ -39,13 +43,14 @@ def beeper_daemon():
         time.sleep(0.5)
 
 def switch_callback(channel):
-    # Give time for the switch to settle (physics yo)
+    # Give the switch some time to settle (physics yo)
     time.sleep(0.05)
 
     if GPIO.input(channel):
         print(SWITCH_MESSAGES.get(channel, "UH OH. You found a bug :'("))
 
         if channel == PRODUCTION_SWITCH_PIN:
+            # Production ENV gets warning beeps
             thread = Thread(target=beeper_daemon, args=())
             thread.daemon = True
             thread.start()
@@ -54,14 +59,13 @@ def switch_callback(channel):
 def deploy_button(channel):
 
     # TODO 
-
     print('DEPLOYING!')
 
 
 #### MAIN ####
 try:
     # GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BOARD)  # physical numbering
+    GPIO.setmode(GPIO.BOARD)  # Physical numbering
 
     for pin in SWITCH_MESSAGES.keys():
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
