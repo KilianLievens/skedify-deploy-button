@@ -115,12 +115,12 @@ def switch_callback(channel):
         thread.daemon = True
         thread.start()
 
-    if all(GPIO.input(ch) for ch in SWITCHES):
-        Screen.wrapper(yolo_mode_effect)
-        return
+    # if all(GPIO.input(ch) for ch in SWITCHES):
+    #     Screen.wrapper(yolo_mode_effect)
+    #     return
 
-    enabled_env = SWITCHES.get(channel, "Invalid switch number").upper()
-    Screen.wrapper(big_text_effect, arguments=[enabled_env])
+    # enabled_env = SWITCHES.get(channel, "Invalid switch number").upper()
+    # Screen.wrapper(big_text_effect, arguments=[enabled_env])
 
 
 def deploy_button(channel):
@@ -140,7 +140,7 @@ def deploy_button(channel):
     ]
 
     if not environments_to_deploy:
-        shell('bash ./roll.sh')  # Hit em with the man
+        shell('bash /home/pi/skedify-deploy-button/roll.sh')  # Hit em with the man
         return
 
     for pin, env in environments_to_deploy:
