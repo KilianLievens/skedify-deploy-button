@@ -52,12 +52,12 @@ GIT_LATEST = '''\
     '''.format(k8s_folder=VIDEO_K8S_FOLDER)
 
 DEPLOY_TEMPLATE = '''\
-    kubectl config set-cluster {cluster_name} \
+    kubectl config use-context {cluster_name} \
     && ytt -f {k8s_folder}/{environment}/cluster-configuration | kubectl apply --validate=false -f - | grep --color=always -e "^" -e "configured" \
     && {k8s_folder}/get-all-enterprise-yaml.sh {environment} | kubectl apply -f - | grep --color=always -e "^" -e "configured" \
     '''
 DRY_RUN_DEPLOY_TEMPLATE = '''\
-    kubectl config set-cluster {cluster_name} \
+    kubectl config use-context {cluster_name} \
     && ytt -f {k8s_folder}/{environment}/cluster-configuration | kubectl diff -f - \
     && {k8s_folder}/get-all-enterprise-yaml.sh {environment} | kubectl diff -f - \
     '''
