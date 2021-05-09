@@ -1,15 +1,9 @@
-from datetime import datetime
 from os import system as shell
 from threading import Thread
 from time import sleep
 
-from asciimatics.effects import Julia, Print, Stars
-from asciimatics.renderers import FigletText
-from asciimatics.scene import Scene
-from asciimatics.screen import Screen
-from pyfiglet import figlet_format
-
 import RPi.GPIO as GPIO
+from pyfiglet import figlet_format
 
 #### CONSTANTS ####
 
@@ -32,59 +26,28 @@ SWITCHES = {
     DEVELOPMENT_SWITCH_PIN: 'development',
     STAGING_SWITCH_PIN: 'staging',
     DEMO_SWITCH_PIN: 'demo',
-    PRODUCTION_SWITCH_PIN: 'production'
+    PRODUCTION_SWITCH_PIN: 'west-europe'
 }
 
 # DEPLOY COMMANDS
-CLUSTER_NAMES = {
-    "development": "SkedifyVideoDevelopment",
-    "staging": "SkedifyVideoStaging",
-    "demo": "SkedifyVideoDemo",
-    "production": "SkedifyVideoProduction"
-}
 
-VIDEO_K8S_FOLDER = '/home/pi/video-k8s'
+K8S_DIR = '/home/pi/provision-cloud'
 
 GIT_LATEST = '''\
     git -C {k8s_folder} fetch -ap \
     && git -C {k8s_folder} checkout master \
     && git -C {k8s_folder} reset --hard origin/master \
-    '''.format(k8s_folder=VIDEO_K8S_FOLDER)
+    '''.format(k8s_folder=K8S_DIR)
 
 DEPLOY_TEMPLATE = '''\
-    kubectl config use-context {cluster_name} \
-    && ytt -f {k8s_folder}/{environment}/cluster-configuration | kubectl apply --validate=false -f - | grep --color=always -e "^" -e "configured" \
-    && {k8s_folder}/get-all-enterprise-yaml.sh {environment} | kubectl apply -f - | grep --color=always -e "^" -e "configured" \
+    source {k8s_folder}/source.bash \
+    && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml sync
     '''
 DRY_RUN_DEPLOY_TEMPLATE = '''\
-    kubectl config use-context {cluster_name} \
-    && ytt -f {k8s_folder}/{environment}/cluster-configuration | kubectl diff -f - \
-    && {k8s_folder}/get-all-enterprise-yaml.sh {environment} | kubectl diff -f - \
+    source {k8s_folder}/source.bash \
+    && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml diff
     '''
 
-#### EFFECTS ####
-
-
-def big_text_effect(screen, text):
-    effects = [
-        Print(
-            screen,
-            FigletText(text, font='big'),
-            screen.height // 2 - 8),
-        Stars(screen, (screen.width + screen.height) // 2)
-    ]
-    screen.play([Scene(effects, 50)], repeat=False)
-
-
-def yolo_mode_effect(screen):
-    effects = [
-        Print(
-            screen,
-            FigletText('YOLOOOO', font='big'),
-            screen.height // 2 - 8),
-        Julia(screen)
-    ]
-    screen.play([Scene(effects, 50)], repeat=False)
 
 #### CALLBACKS ####
 
@@ -110,17 +73,10 @@ def switch_callback(channel):
         return
 
     if channel == PRODUCTION_SWITCH_PIN:
-        # Production ENV gets warning beeps
+        # Production ENV gets warning beeps, daemon will quit appropriately itself.
         thread = Thread(target=beeper_daemon, args=())
         thread.daemon = True
         thread.start()
-
-    # if all(GPIO.input(ch) for ch in SWITCHES):
-    #     Screen.wrapper(yolo_mode_effect)
-    #     return
-
-    # enabled_env = SWITCHES.get(channel, "Invalid switch number").upper()
-    # Screen.wrapper(big_text_effect, arguments=[enabled_env])
 
 
 def deploy_button(channel):
@@ -128,19 +84,19 @@ def deploy_button(channel):
 
     if SAFE_MODE:
         sleep(0.5)
-        if(not GPIO.input(channel)):
+        if (not GPIO.input(channel)):
             print('Safe mode is on. Press the deploy button for at least half a second. Button cooldown is 3 seconds')
             return
 
     print(figlet_format('DEPLOYING'))
 
-    commands = [GIT_LATEST] # Make sure video-k8s is up to date
+    commands = [GIT_LATEST]  # Make sure provision cloud is up to date
     environments_to_deploy = [
         [pin, env] for pin, env in SWITCHES.items() if GPIO.input(pin)
     ]
 
     if not environments_to_deploy:
-        shell('bash /home/pi/skedify-deploy-button/roll.sh')  # Hit em with the man
+        print(figlet_format('NOOP'))
         return
 
     for pin, env in environments_to_deploy:
@@ -148,12 +104,13 @@ def deploy_button(channel):
             template.format(
                 cluster_name=CLUSTER_NAMES[env],
                 environment=env,
-                k8s_folder=VIDEO_K8S_FOLDER
+                k8s_folder=K8S_DIR
             )
         )
     shell('&& '.join(commands))
 
     print(figlet_format('DONE'))
+
 
 #### MAIN ####
 
@@ -184,5 +141,5 @@ try:
     message = input("LETS GO!\n")
 
 finally:
-    GPIO.cleanup() # Always cleanup
+    GPIO.cleanup()  # Always cleanup
     print(figlet_format('Cleaned up. Goodbye.'))
