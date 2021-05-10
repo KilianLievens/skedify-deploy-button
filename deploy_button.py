@@ -102,7 +102,6 @@ def deploy_button(channel):
     for pin, env in environments_to_deploy:
         commands.append(
             template.format(
-                cluster_name=CLUSTER_NAMES[env],
                 environment=env,
                 k8s_folder=K8S_DIR
             )
