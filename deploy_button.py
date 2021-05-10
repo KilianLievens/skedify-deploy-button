@@ -8,6 +8,7 @@ from time import sleep
 
 SAFE_MODE = True
 DRY_RUN_MODE = True
+CHARTMUSEUM_PASSWORD = 'peanuts'
 
 # BUTTONS
 DEPLOY_BUTTON_PIN = 37
@@ -45,8 +46,6 @@ def shell_git_latest():
 def deploy(environment):
     command = 'list' if DRY_RUN_MODE else 'sync'
 
-    # Read chartmuseum password
-    exec(open('source').read())
     subprocess.run(
         '''CHARTMUSEUM_PASSWORD={CHARTMUSEUM_PASSWORD} helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml {command}}'''.format(
             k8s_folder=K8S_DIR,
