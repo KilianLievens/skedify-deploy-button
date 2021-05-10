@@ -45,11 +45,14 @@ def shell_git_latest():
 def deploy(environment):
     command = 'list' if DRY_RUN_MODE else 'sync'
 
-    subprocess.run('''source {k8s_folder}/source.sh'''.format(k8s_folder=K8S_DIR).split())
-    subprocess.run('''helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml {command}}'''.format(
-        k8s_folder=K8S_DIR,
-        environment=environment,
-        command=command).split())
+    # Read chartmuseum password
+    exec(open('source').read())
+    subprocess.run(
+        '''CHARTMUSEUM_PASSWORD={CHARTMUSEUM_PASSWORD} helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml {command}}'''.format(
+            k8s_folder=K8S_DIR,
+            environment=environment,
+            command=command,
+            CHARTMUSEUM_PASSWORD=CHARTMUSEUM_PASSWORD).split())
 
 
 #### CALLBACKS ####
