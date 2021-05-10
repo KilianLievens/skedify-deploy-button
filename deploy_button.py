@@ -35,8 +35,8 @@ K8S_DIR = '/home/pi/provision-cloud'
 
 GIT_LATEST = '''\
     git -C {k8s_folder} fetch -ap \
-    && git -C {k8s_folder} checkout master \
-    && git -C {k8s_folder} reset --hard origin/master \
+    && git -C {k8s_folder} checkout feature/SKED-7266 \
+    && git -C {k8s_folder} reset --hard origin/feature/SKED-7266 \
     '''.format(k8s_folder=K8S_DIR)
 
 DEPLOY_TEMPLATE = '''\
