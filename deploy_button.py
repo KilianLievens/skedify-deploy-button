@@ -33,12 +33,13 @@ SWITCHES = {
 K8S_DIR = '/home/pi/provision-cloud/k8s'
 K8S_BRANCH = 'feature/SKED-7266'
 
+
 def shell_git_latest():
-    subprocess.run('''git -C {k8s_folder} fetch -ap'''.format(k8s_folder=K8S_DIR))
-    subprocess.run('''git -C {k8s_folder} checkout {k8s_branch}'''.format(k8s_folder=K8S_DIR, k8s_branch=K8S_BRANCH))
-    subprocess.run(
-        '''git -C {k8s_folder} reset --hard origin/{k8s_branch}'''.format(k8s_folder=K8S_DIR, k8s_branch=K8S_BRANCH)
-    )
+    subprocess.run('''git -C {k8s_folder} fetch -ap'''.format(k8s_folder=K8S_DIR).split())
+    subprocess.run('''git -C {k8s_folder} checkout {k8s_branch}'''.format(k8s_folder=K8S_DIR,
+                                                                          k8s_branch=K8S_BRANCH).split())
+    subprocess.run('''git -C {k8s_folder} reset --hard origin/{k8s_branch}'''.format(k8s_folder=K8S_DIR,
+                                                                                     k8s_branch=K8S_BRANCH).split())
 
 
 def deploy(environment):
@@ -46,7 +47,9 @@ def deploy(environment):
 
     subprocess.run('''source {k8s_folder}/source.sh'''.format(k8s_folder=K8S_DIR))
     subprocess.run('''helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml {command}}'''.format(
-        k8s_folder=K8S_DIR, environment=environment, command=command))
+        k8s_folder=K8S_DIR,
+        environment=environment,
+        command=command).split())
 
 
 #### CALLBACKS ####
