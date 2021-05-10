@@ -31,7 +31,7 @@ SWITCHES = {
 
 # DEPLOY COMMANDS
 
-K8S_DIR = '/home/pi/provision-cloud'
+K8S_DIR = '/home/pi/provision-cloud/k8s'
 
 GIT_LATEST = '''\
     git -C {k8s_folder} fetch -ap \
