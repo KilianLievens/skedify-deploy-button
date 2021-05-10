@@ -1,9 +1,8 @@
+import RPi.GPIO as GPIO
+import subprocess
+from pyfiglet import figlet_format
 from threading import Thread
 from time import sleep
-
-import subprocess
-import RPi.GPIO as GPIO
-from pyfiglet import figlet_format
 
 #### CONSTANTS ####
 
@@ -32,21 +31,22 @@ SWITCHES = {
 # DEPLOY COMMANDS
 
 K8S_DIR = '/home/pi/provision-cloud/k8s'
+K8S_BRANCH = 'feature/SKED-7266'
 
-GIT_LATEST = '''\
-    git -C {k8s_folder} fetch -ap \
-    && git -C {k8s_folder} checkout feature/SKED-7266 \
-    && git -C {k8s_folder} reset --hard origin/feature/SKED-7266 \
-    '''.format(k8s_folder=K8S_DIR)
+def shell_git_latest():
+    subprocess.run('''git -C {k8s_folder} fetch -ap'''.format(k8s_folder=K8S_DIR))
+    subprocess.run('''git -C {k8s_folder} checkout {k8s_branch}'''.format(k8s_folder=K8S_DIR, k8s_branch=K8S_BRANCH))
+    subprocess.run(
+        '''git -C {k8s_folder} reset --hard origin/{k8s_branch}'''.format(k8s_folder=K8S_DIR, k8s_branch=K8S_BRANCH)
+    )
 
-DEPLOY_TEMPLATE = '''\
-    source {k8s_folder}/source.sh \
-    && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml sync
-    '''
-DRY_RUN_DEPLOY_TEMPLATE = '''\
-    source {k8s_folder}/source.sh \
-    && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml diff
-    '''
+
+def deploy(environment):
+    command = 'list' if DRY_RUN_MODE else 'sync'
+
+    subprocess.run('''source {k8s_folder}/source.sh'''.format(k8s_folder=K8S_DIR))
+    subprocess.run('''helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml {command}}'''.format(
+        k8s_folder=K8S_DIR, environment=environment, command=command))
 
 
 #### CALLBACKS ####
@@ -80,17 +80,16 @@ def switch_callback(channel):
 
 
 def deploy_button(channel):
-    template = DRY_RUN_DEPLOY_TEMPLATE if DRY_RUN_MODE else DEPLOY_TEMPLATE
-
     if SAFE_MODE:
         sleep(0.5)
-        if (not GPIO.input(channel)):
+        if not GPIO.input(channel):
             print('Safe mode is on. Press the deploy button for at least half a second. Button cooldown is 3 seconds')
             return
 
     print(figlet_format('DEPLOYING'))
 
-    commands = [GIT_LATEST]  # Make sure provision cloud is up to date
+    shell_git_latest()
+
     environments_to_deploy = [
         [pin, env] for pin, env in SWITCHES.items() if GPIO.input(pin)
     ]
@@ -100,14 +99,7 @@ def deploy_button(channel):
         return
 
     for pin, env in environments_to_deploy:
-        commands.append(
-            template.format(
-                environment=env,
-                k8s_folder=K8S_DIR
-            )
-        )
-    process = subprocess.Popen('&& '.join(commands).split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
+        deploy(env)
 
     print(figlet_format('DONE'))
 
