@@ -1,7 +1,7 @@
-from os import system as shell
 from threading import Thread
 from time import sleep
 
+import subprocess
 import RPi.GPIO as GPIO
 from pyfiglet import figlet_format
 
@@ -40,11 +40,11 @@ GIT_LATEST = '''\
     '''.format(k8s_folder=K8S_DIR)
 
 DEPLOY_TEMPLATE = '''\
-    source {k8s_folder}/source.bash || source {k8s_folder}/source.sh \
+    source {k8s_folder}/source.sh \
     && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml sync
     '''
 DRY_RUN_DEPLOY_TEMPLATE = '''\
-    source {k8s_folder}/source.bash || source {k8s_folder}/source.sh \
+    source {k8s_folder}/source.sh \
     && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml diff
     '''
 
@@ -106,7 +106,8 @@ def deploy_button(channel):
                 k8s_folder=K8S_DIR
             )
         )
-    shell('&& '.join(commands))
+    process = subprocess.Popen('&& '.join(commands).split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
 
     print(figlet_format('DONE'))
 
