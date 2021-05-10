@@ -40,11 +40,11 @@ GIT_LATEST = '''\
     '''.format(k8s_folder=K8S_DIR)
 
 DEPLOY_TEMPLATE = '''\
-    source {k8s_folder}/source.bash \
+    source {k8s_folder}/source.bash || source {k8s_folder}/source.sh \
     && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml sync
     '''
 DRY_RUN_DEPLOY_TEMPLATE = '''\
-    source {k8s_folder}/source.bash \
+    source {k8s_folder}/source.bash || source {k8s_folder}/source.sh \
     && helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml diff
     '''
 
