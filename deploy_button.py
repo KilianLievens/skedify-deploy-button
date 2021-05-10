@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-import subprocess
+import subprocess, os
 from pyfiglet import figlet_format
 from threading import Thread
 from time import sleep
@@ -46,8 +46,10 @@ def shell_git_latest():
 def deploy(environment):
     command = 'list' if DRY_RUN_MODE else 'sync'
 
+    env = os.environ
+    env["CHARTMUSEUM_PASSWORD"] = CHARTMUSEUM_PASSWORD
     subprocess.run(
-        '''CHARTMUSEUM_PASSWORD={CHARTMUSEUM_PASSWORD} helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml {command}}'''.format(
+        '''helmfile --environment full --file {k8s_folder}/helmfile.{environment}.yaml {command}'''.format(
             k8s_folder=K8S_DIR,
             environment=environment,
             command=command,
